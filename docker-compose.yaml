@@ -1,0 +1,19 @@
+services:
+  tasks:
+    build:
+      context: .
+      dockerfile: apps/tasks/Dockerfile
+      target: development
+    command: npm run start:dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+  
+  frontier_redis:
+    container_name: frontier_redis
+    image: redis:alpine
+    ports:
+      - "6381:6379"
+  frontier_mongo:
+    image: mongo
