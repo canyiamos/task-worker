@@ -1,3 +1,4 @@
+import { STATUS } from '@app/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Job, Queue } from 'bull';
@@ -70,8 +71,23 @@ export class TasksService {
     const task = await this.findOne(_id);
 
     if (task) {
-      await this.taskQueue.pause();
-      return { message: `Task ${_id} paused` };
+      // BullMq does not have a way of stopping jobs in progress to to pause the task i am removing from the queue and updating ths state in the DB to paused.
+      const job: Job | null = await this.taskQueue.getJob(_id);
+
+      if (job) {
+        const state = await job.getState();
+
+        if (state !== 'completed' && state !== 'failed') {
+          await job.remove();
+          await this.update(_id, { status: STATUS.paused });
+
+          return { message: `Task ${_id} paused` };
+        }
+
+        throw new BadRequestException(
+          `Task with this id - ${_id} already completed`,
+        );
+      }
     }
   }
 
@@ -79,8 +95,12 @@ export class TasksService {
     const task = await this.findOne(_id);
 
     if (task) {
-      await this.taskQueue.resume();
-      return { message: `Task ${_id} resumed` };
+      const job: Job | null = await this.taskQueue.getJob(_id);
+
+      if (!job) {
+        await this.runTask(_id);
+        return { message: `Task ${_id} resumed` };
+      }
     }
   }
 }
