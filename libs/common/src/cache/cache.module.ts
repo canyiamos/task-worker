@@ -11,7 +11,7 @@ import { Redis } from 'ioredis';
       isGlobal: true,
       useFactory: (configService: ConfigService) => {
         const redisClient = new Redis(
-          configService.get<string>('REDIS_HOST', 'redis://localhost') +
+          configService.get<string>('REDIS_HOST', 'frontier_redis') +
             ':' +
             configService.get<number>('REDIS_PORT', 6379),
         );
