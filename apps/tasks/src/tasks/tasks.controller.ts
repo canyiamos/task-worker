@@ -50,6 +50,11 @@ export class TasksController {
     return this.tasksService.getStatus(id);
   }
 
+  @Get(':id/result')
+  getResult(@Param('id') id: string) {
+    return this.tasksService.getResult(id);
+  }
+
   @Post(':id/pause')
   pauseTask(@Param('id') id: string) {
     return this.tasksService.pauseTask(id);
